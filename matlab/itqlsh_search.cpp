@@ -27,9 +27,9 @@ namespace lshbox
 class matItqLsh
 {
 public:
-    typedef double DATATYPE;
+    typedef double scalar;
     void init(
-        DATATYPE *source,
+        scalar *source,
         unsigned dim,
         unsigned size,
         const std::string &index,
@@ -47,7 +47,7 @@ public:
         }
         else
         {
-            itqLsh<DATATYPE>::Parameter param;
+            itqLsh<scalar>::Parameter param;
             param.M = M;
             param.L = L;
             param.D = data.getDim();
@@ -59,11 +59,11 @@ public:
             lsh.save(index);
         }
     }
-    void query(DATATYPE *quy, unsigned size, DATATYPE *indices, DATATYPE *dists, unsigned type, unsigned K)
+    void query(scalar *quy, unsigned size, scalar *indices, scalar *dists, unsigned type, unsigned K)
     {
-        Matrix<DATATYPE>::Accessor accessor(data);
-        Metric<DATATYPE> metric(data.getDim(), type);
-        Scanner<lshbox::Matrix<DATATYPE>::Accessor> scanner(
+        Matrix<scalar>::Accessor accessor(data);
+        Metric<scalar> metric(data.getDim(), type);
+        Scanner<lshbox::Matrix<scalar>::Accessor> scanner(
             accessor,
             metric,
             K
@@ -82,8 +82,8 @@ public:
         }
     }
 private:
-    Matrix<DATATYPE> data;
-    itqLsh<DATATYPE> lsh;
+    Matrix<scalar> data;
+    itqLsh<scalar> lsh;
 };
 }
 void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])

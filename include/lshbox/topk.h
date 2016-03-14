@@ -177,8 +177,8 @@ class Topk
 {
 private:
     unsigned K;
-    MaxHeap<std::pair<float, unsigned> > heap;
-    std::vector<std::pair<float, unsigned> > tops;
+    MaxHeap<std::pair<double, unsigned> > heap;
+    std::vector<std::pair<double, unsigned> > tops;
 public:
     Topk(): K(0) {}
     /**
@@ -195,9 +195,9 @@ public:
      * @param key  the key.
      * @param dist the distance.
      */
-    void push(unsigned key, float dist)
+    void push(unsigned key, double dist)
     {
-        std::pair<float, unsigned> item(dist, key);
+        std::pair<double, unsigned> item(dist, key);
         unsigned S = heap.size();
         if (S < K)
         {
@@ -217,23 +217,23 @@ public:
         unsigned total = heap.size();
         for (unsigned i = 0; i != total; ++i)
         {
-            std::pair<float, unsigned> top;
+            std::pair<double, unsigned> top;
             heap.deleteMax(top);
             tops.push_back(top);
         }
         std::reverse(tops.begin(), tops.end());
     }
     /**
-     * Get the std::vector<std::pair<float, unsigned> > instance which contains the nearest keys and distances.
+     * Get the std::vector<std::pair<double, unsigned> > instance which contains the nearest keys and distances.
      */
-    const std::vector<std::pair<float, unsigned> > &getTopk() const
+    const std::vector<std::pair<double, unsigned> > &getTopk() const
     {
         return tops;
     }
     /**
-     * Get the std::vector<std::pair<float, unsigned> > instance which contains the nearest keys and distances.
+     * Get the std::vector<std::pair<double, unsigned> > instance which contains the nearest keys and distances.
      */
-    std::vector<std::pair<float, unsigned> > &getTopk()
+    std::vector<std::pair<double, unsigned> > &getTopk()
     {
         return tops;
     }
@@ -241,14 +241,14 @@ public:
      * Calculate the recall vale with another heap.
      * @param  topk another TopK.
      */
-    const float recall(const Topk &topk) const
+    const double recall(const Topk &topk) const
     {
-        std::vector<std::pair<float, unsigned> > tops = getTopk();
-        std::vector<std::pair<float, unsigned> > benchTops = topk.getTopk();
+        std::vector<std::pair<double, unsigned> > tops = getTopk();
+        std::vector<std::pair<double, unsigned> > benchTops = topk.getTopk();
         unsigned matched = 0;
-        for (std::vector<std::pair<float, unsigned> >::iterator i = tops.begin(); i != tops.end(); ++i)
+        for (std::vector<std::pair<double, unsigned> >::iterator i = tops.begin(); i != tops.end(); ++i)
         {
-            for (std::vector<std::pair<float, unsigned> >::iterator j = benchTops.begin(); j != benchTops.end(); ++j)
+            for (std::vector<std::pair<double, unsigned> >::iterator j = benchTops.begin(); j != benchTops.end(); ++j)
             {
                 if (i->second == j->second)
                 {
@@ -257,20 +257,20 @@ public:
                 }
             }
         }
-        return float(matched + 1) / float(benchTops.size() + 1);
+        return double(matched + 1) / double(benchTops.size() + 1);
     }
     /**
      * Calculate the precision vale with another heap.
      * @param  topk another TopK.
      */
-    const float precision(const Topk &topk) const
+    const double precision(const Topk &topk) const
     {
-        std::vector<std::pair<float, unsigned> > tops = getTopk();
-        std::vector<std::pair<float, unsigned> > benchTops = topk.getTopk();
+        std::vector<std::pair<double, unsigned> > tops = getTopk();
+        std::vector<std::pair<double, unsigned> > benchTops = topk.getTopk();
         unsigned matched = 0;
-        for (std::vector<std::pair<float, unsigned> >::iterator i = tops.begin(); i != tops.end(); ++i)
+        for (std::vector<std::pair<double, unsigned> >::iterator i = tops.begin(); i != tops.end(); ++i)
         {
-            for (std::vector<std::pair<float, unsigned> >::iterator j = benchTops.begin(); j != benchTops.end(); ++j)
+            for (std::vector<std::pair<double, unsigned> >::iterator j = benchTops.begin(); j != benchTops.end(); ++j)
             {
                 if (i->second == j->second)
                 {
@@ -279,7 +279,7 @@ public:
                 }
             }
         }
-        return float(matched + 1) / float(tops.size() + 1);
+        return double(matched + 1) / double(tops.size() + 1);
     }
 };
 

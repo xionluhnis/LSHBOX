@@ -50,7 +50,7 @@ namespace lshbox
  *     2014 IEEE Symposium on (pp.1-5). IEEE.
  *
  */
-template <typename DATATYPE = float>
+template <typename DATATYPE = double>
 class kdbqLsh
 {
 public:
@@ -110,21 +110,21 @@ public:
     {
         int npca = param.N;
         std::mt19937 rng(unsigned(std::time(0)));
-        std::normal_distribution<float> nd;
+        std::normal_distribution<double> nd;
         X.resize(data.getSize(), data.getDim());
         for (unsigned i = 0; i != X.rows(); ++i)
         {
-            X.row(i) = Eigen::Map<Eigen::VectorXf>(data[i], data.getDim());
+            X.row(i) = Eigen::Map<Eigen::VectorXd>(data[i], data.getDim());
         }
-        Eigen::MatrixXf cov = X.transpose() * X;
-        Eigen::SelfAdjointEigenSolver<Eigen::MatrixXf> eig(cov);
-        Eigen::MatrixXf mat_c = X * eig.eigenvectors().rightCols(npca);
+        Eigen::MatrixXd cov = X.transpose() * X;
+        Eigen::SelfAdjointEigenSolver<Eigen::MatrixXd> eig(cov);
+        Eigen::MatrixXd mat_c = X * eig.eigenvectors().rightCols(npca);
 
         std::cout << std::endl;
         for (unsigned k = 0; k != param.L; ++k)
         {
             std::cout << "Computing the " << k + 1 << "th Hash Table Rotation-Matrix ..." << std::endl;
-            Eigen::MatrixXf R(npca, npca);
+            Eigen::MatrixXd R(npca, npca);
             for (unsigned i = 0; i != R.rows(); ++i)
             {
                 for (unsigned j = 0; j != R.cols(); ++j)
@@ -132,12 +132,12 @@ public:
                     R(i, j) = nd(rng);
                 }
             }
-            Eigen::JacobiSVD<Eigen::MatrixXf> svd(R, Eigen::ComputeThinU | Eigen::ComputeThinV);
+            Eigen::JacobiSVD<Eigen::MatrixXd> svd(R, Eigen::ComputeThinU | Eigen::ComputeThinV);
             R = svd.matrixU();//The initial orthogonal matrix
             for (unsigned iter = 0; iter != param.I; ++iter)
             {
-                Eigen::MatrixXf Z = mat_c * R;
-                Eigen::MatrixXf UX(Z.rows(), Z.cols());
+                Eigen::MatrixXd Z = mat_c * R;
+                Eigen::MatrixXd UX(Z.rows(), Z.cols());
                 for (unsigned i = 0; i != Z.rows(); ++i)
                 {
                     for (unsigned j = 0; j != Z.cols(); ++j)
@@ -152,7 +152,7 @@ public:
                         }
                     }
                 }
-                Eigen::JacobiSVD<Eigen::MatrixXf> svd_tmp(UX.transpose () * mat_c, Eigen::ComputeThinU | Eigen::ComputeThinV);
+                Eigen::JacobiSVD<Eigen::MatrixXd> svd_tmp(UX.transpose () * mat_c, Eigen::ComputeThinU | Eigen::ComputeThinV);
                 R = svd_tmp.matrixV() * svd_tmp.matrixU().transpose ();
             }
             pcsAll[k].resize(npca);
@@ -192,12 +192,12 @@ public:
     {
         for (unsigned k = 0; k != param.L; ++k)
         {
-            Eigen::MatrixXf prj(X.rows(), param.N);
+            Eigen::MatrixXd prj(X.rows(), param.N);
             for (unsigned i = 0; i != X.rows(); ++i)
             {
                 for (unsigned q = 0; q != param.N; ++q)
                 {
-                    float sum = 0.0;
+                    double sum = 0.0;
                     for (unsigned j = 0; j != X.cols(); ++j)
                     {
                         sum += X(i, j) * pcsAll[k][q][j];
@@ -206,12 +206,12 @@ public:
                 }
             }
 
-            Eigen::MatrixXf prjMat(X.rows(), param.N);
+            Eigen::MatrixXd prjMat(X.rows(), param.N);
             for (unsigned i = 0; i != X.rows(); ++i)
             {
                 for (unsigned q = 0; q != omegasAll[k].size(); ++q)
                 {
-                    float sum = 0.0;
+                    double sum = 0.0;
                     for (unsigned j = 0; j != omegasAll[k].size(); ++j)
                     {
                         sum += prj(i, j) * omegasAll[k][q][j];
@@ -232,7 +232,7 @@ public:
     /**
      * K-means clustering
      */
-    void Cluster(unsigned k, Eigen::MatrixXf prjMatrix)
+    void Cluster(unsigned k, Eigen::MatrixXd prjMatrix)
     {
 
         S[k].resize(param.N);
@@ -243,15 +243,15 @@ public:
             u1(k, i) = prjMatrix.row(i).mean();
             u2(k, i) = prjMatrix.row(i).maxCoeff();
 
-            float E[3] = { 0 };
+            double E[3] = { 0 };
             for (unsigned j = 0; j != prjMatrix.rows(); ++j)
             {
-                float value[3];
+                double value[3];
                 value[0] = fabsf(prjMatrix(j, i) - u0(k, i));
                 value[1] = fabsf(prjMatrix(j, i) - u1(k, i));
                 value[2] = fabsf(prjMatrix(j, i) - u2(k, i));
 
-                float distance = value[0]; unsigned label = 0;
+                double distance = value[0]; unsigned label = 0;
                 for (unsigned t = 0; t != 3; ++t)
                 {
                     if (value[t] < distance)
@@ -260,24 +260,24 @@ public:
                         label = t;
                     }
                 }
-                std::pair<float, unsigned> dot(prjMatrix(j, i), j);
+                std::pair<double, unsigned> dot(prjMatrix(j, i), j);
                 S[k][i][label].push_back(dot);
                 E[label] += pow(value[label], 2);
             }
 
-            float Var = E[0] + E[1] + E[2];
-            float minVar = std::numeric_limits<float>::max();
-            float sum[3] = { 0 };
+            double Var = E[0] + E[1] + E[2];
+            double minVar = std::numeric_limits<double>::max();
+            double sum[3] = { 0 };
             while (Var != minVar)
             {
                 minVar = Var;
-                for (std::vector<std::pair<float, unsigned > >::iterator it0 = S[k][i][0].begin(); it0 != S[k][i][0].end(); ++it0)
+                for (std::vector<std::pair<double, unsigned > >::iterator it0 = S[k][i][0].begin(); it0 != S[k][i][0].end(); ++it0)
                     sum[0] += (it0->first);
 
-                for (std::vector<std::pair<float, unsigned > >::iterator it1 = S[k][i][1].begin(); it1 != S[k][i][1].end(); ++it1)
+                for (std::vector<std::pair<double, unsigned > >::iterator it1 = S[k][i][1].begin(); it1 != S[k][i][1].end(); ++it1)
                     sum[1] += (it1->first);
 
-                for (std::vector<std::pair<float, unsigned > >::iterator it2 = S[k][i][2].begin(); it2 != S[k][i][2].end(); ++it2)
+                for (std::vector<std::pair<double, unsigned > >::iterator it2 = S[k][i][2].begin(); it2 != S[k][i][2].end(); ++it2)
                     sum[2] += (it2->first);
 
                 u0(k, i) = sum[0] / ((int)S[k][i][0].size());
@@ -285,16 +285,16 @@ public:
                 u2(k, i) = sum[2] / ((int)S[k][i][2].size());
 
                 S[k][i][0].clear(); S[k][i][1].clear(); S[k][i][2].clear();
-                memset(E, 0, sizeof(float) * 3);
-                memset(sum, 0, sizeof(float) * 3);
+                memset(E, 0, sizeof(double) * 3);
+                memset(sum, 0, sizeof(double) * 3);
                 for (unsigned j = 0; j != prjMatrix.rows(); ++j)
                 {
-                    float val[3];
+                    double val[3];
                     val[0] = fabsf(prjMatrix(j, i) - u0(k, i));
                     val[1] = fabsf(prjMatrix(j, i) - u1(k, i));
                     val[2] = fabsf(prjMatrix(j, i) - u2(k, i));
 
-                    float dist = val[0]; unsigned lab = 0;
+                    double dist = val[0]; unsigned lab = 0;
                     for (unsigned t = 0; t != 3; t++)
                     {
                         if (val[t] < dist)
@@ -303,7 +303,7 @@ public:
                             lab = t;
                         }
                     }
-                    std::pair<float, unsigned> dot(prjMatrix(j, i), j);
+                    std::pair<double, unsigned> dot(prjMatrix(j, i), j);
                     S[k][i][lab].push_back(dot);
                     E[lab] += pow(val[lab], 2);
                 }
@@ -321,11 +321,11 @@ public:
         std::vector<unsigned > sum(X.rows(), 0);
         for (unsigned i = 0; i != param.N; ++i)
         {
-            for (std::vector<std::pair<float, unsigned > >::iterator it0 = S[key][i][0].begin(); it0 != S[key][i][0].end(); ++it0)
+            for (std::vector<std::pair<double, unsigned > >::iterator it0 = S[key][i][0].begin(); it0 != S[key][i][0].end(); ++it0)
             {
                 sum[it0->second] += rndArray[key][2 * i + 1];
             }
-            for (std::vector<std::pair<float, unsigned > >::iterator it2 = S[key][i][2].begin(); it2 != S[key][i][2].end(); ++it2)
+            for (std::vector<std::pair<double, unsigned > >::iterator it2 = S[key][i][2].begin(); it2 != S[key][i][2].end(); ++it2)
             {
                 sum[it2->second] += rndArray[key][2 * i];
             }
@@ -349,7 +349,7 @@ public:
         for (unsigned k = 0; k != param.L; ++k)
         {
             unsigned sum = 0;
-            std::vector<float> domin_pc(param.N);
+            std::vector<double> domin_pc(param.N);
             for (unsigned i = 0; i != domin_pc.size(); ++i)
             {
                 domin_pc[i] = 0.0;
@@ -361,18 +361,18 @@ public:
 
             for (unsigned i = 0; i != domin_pc.size(); ++i)
             {
-                float product = 0.0;
+                double product = 0.0;
                 for (unsigned j = 0; j != omegasAll[k][i].size(); ++j)
                 {
-                    product += float(domin_pc[j] * omegasAll[k][i][j]);
+                    product += double(domin_pc[j] * omegasAll[k][i][j]);
                 }
 
-                float value[3];
+                double value[3];
                 value[0] = fabsf(product - u0(k, i));
                 value[1] = fabsf(product - u1(k, i));
                 value[2] = fabsf(product - u2(k, i));
 
-                float min = value[0]; unsigned label;
+                double min = value[0]; unsigned label;
                 for (unsigned t = 0; t != 3; t++)
                 {
                     if (value[t] < min)
@@ -439,8 +439,8 @@ public:
             {
                 pcsAll[i][j].resize(param.D);
                 omegasAll[i][j].resize(param.N);
-                in.read((char *)&pcsAll[i][j][0], sizeof(float) * param.D);
-                in.read((char *)&omegasAll[i][j][0], sizeof(float) * param.N);
+                in.read((char *)&pcsAll[i][j][0], sizeof(double) * param.D);
+                in.read((char *)&omegasAll[i][j][0], sizeof(double) * param.N);
             }
         }
         in.close();
@@ -472,23 +472,23 @@ public:
             }
             for (unsigned j = 0; j != param.N; ++j)
             {
-                out.write((char *)&pcsAll[i][j][0], sizeof(float) * param.D);
-                out.write((char *)&omegasAll[i][j][0], sizeof(float) * param.N);
+                out.write((char *)&pcsAll[i][j][0], sizeof(double) * param.D);
+                out.write((char *)&omegasAll[i][j][0], sizeof(double) * param.N);
             }
         }
         out.close();
     }
 private:
     Parameter param;
-    std::vector<std::vector<std::vector<float> > >  pcsAll;
-    std::vector<std::vector<std::vector<float> > >  omegasAll;
+    std::vector<std::vector<std::vector<double> > >  pcsAll;
+    std::vector<std::vector<std::vector<double> > >  omegasAll;
     std::vector<std::vector<unsigned> > rndArray;
     std::vector<std::map<unsigned, std::vector<unsigned> > > tables;
 
-    Eigen::VectorXf prjColMean;
-    std::vector<std::vector<std::vector<std::pair<float, unsigned> > > > prjArray;
-    std::vector<std::vector<std::vector<std::vector<std::pair<float, unsigned> > > > > S;
-    Eigen::MatrixXf u0, u1, u2;
-    Eigen::MatrixXf X;
+    Eigen::VectorXd prjColMean;
+    std::vector<std::vector<std::vector<std::pair<double, unsigned> > > > prjArray;
+    std::vector<std::vector<std::vector<std::vector<std::pair<double, unsigned> > > > > S;
+    Eigen::MatrixXd u0, u1, u2;
+    Eigen::MatrixXd X;
 };
 }

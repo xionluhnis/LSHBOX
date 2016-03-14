@@ -46,7 +46,7 @@ namespace lshbox
  *     Pattern Analysis and Machine Intelligence, IEEE Transactions on, 2013,
  *     35(12): 2916-2929.
  */
-template <typename DATATYPE = float>
+template <typename DATATYPE = double>
 class itqLsh
 {
 public:
@@ -117,17 +117,17 @@ public:
                 }
             }
             std::sort(seqs.begin(), seqs.end());
-            Eigen::MatrixXf tmp(param.S, data.getDim());
+            Eigen::MatrixXd tmp(param.S, data.getDim());
             for (unsigned i = 0; i != tmp.rows(); ++i)
             {
-                tmp.row(i) = Eigen::Map<Eigen::VectorXf>(data[seqs[i]], data.getDim());
+                tmp.row(i) = Eigen::Map<Eigen::VectorXd>(data[seqs[i]], data.getDim());
             }
-            Eigen::MatrixXf centered = tmp.rowwise() - tmp.colwise().mean();
-            Eigen::MatrixXf cov = (centered.transpose() * centered) / float(tmp.rows() - 1);
-            Eigen::SelfAdjointEigenSolver<Eigen::MatrixXf> eig(cov);
-            Eigen::MatrixXf mat_pca = eig.eigenvectors().rightCols(npca);
-            Eigen::MatrixXf mat_c = tmp * mat_pca;
-            Eigen::MatrixXf R(npca, npca);
+            Eigen::MatrixXd centered = tmp.rowwise() - tmp.colwise().mean();
+            Eigen::MatrixXd cov = (centered.transpose() * centered) / float(tmp.rows() - 1);
+            Eigen::SelfAdjointEigenSolver<Eigen::MatrixXd> eig(cov);
+            Eigen::MatrixXd mat_pca = eig.eigenvectors().rightCols(npca);
+            Eigen::MatrixXd mat_c = tmp * mat_pca;
+            Eigen::MatrixXd R(npca, npca);
             for (unsigned i = 0; i != R.rows(); ++i)
             {
                 for (unsigned j = 0; j != R.cols(); ++j)
@@ -135,12 +135,12 @@ public:
                     R(i, j) = nd(rng);
                 }
             }
-            Eigen::JacobiSVD<Eigen::MatrixXf> svd(R, Eigen::ComputeThinU | Eigen::ComputeThinV);
+            Eigen::JacobiSVD<Eigen::MatrixXd> svd(R, Eigen::ComputeThinU | Eigen::ComputeThinV);
             R = svd.matrixU();
             for (unsigned iter = 0; iter != param.I; ++iter)
             {
-                Eigen::MatrixXf Z = mat_c * R;
-                Eigen::MatrixXf UX(Z.rows(), Z.cols());
+                Eigen::MatrixXd Z = mat_c * R;
+                Eigen::MatrixXd UX(Z.rows(), Z.cols());
                 for (unsigned i = 0; i != Z.rows(); ++i)
                 {
                     for (unsigned j = 0; j != Z.cols(); ++j)
@@ -155,7 +155,7 @@ public:
                         }
                     }
                 }
-                Eigen::JacobiSVD<Eigen::MatrixXf> svd_tmp(UX.transpose() * mat_c, Eigen::ComputeThinU | Eigen::ComputeThinV);
+                Eigen::JacobiSVD<Eigen::MatrixXd> svd_tmp(UX.transpose() * mat_c, Eigen::ComputeThinU | Eigen::ComputeThinV);
                 R = svd_tmp.matrixV() * svd_tmp.matrixU().transpose();
             }
             omegasAll[k].resize(npca);

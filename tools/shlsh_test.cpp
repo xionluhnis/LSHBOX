@@ -35,7 +35,7 @@ int main(int argc, char const *argv[])
         return -1;
     }
     std::cout << "Example of using Spectral Hashing" << std::endl << std::endl;
-    typedef float DATATYPE;
+    typedef double DATATYPE;
     std::cout << "LOADING DATA ..." << std::endl;
     lshbox::timer timer;
     lshbox::Matrix<DATATYPE> data(argv[1]);

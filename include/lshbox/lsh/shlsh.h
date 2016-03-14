@@ -44,7 +44,7 @@ namespace lshbox
  *     Y. Weiss, A. Torralba, R. Fergus. Spectral Hashing.
  *     Advances in Neural Information Processing Systems, 2008.
  */
-template <typename DATATYPE = float>
+template <typename DATATYPE = double>
 class shLsh
 {
 public:
@@ -113,15 +113,15 @@ public:
                 }
             }
             std::sort(seqs.begin(), seqs.end());
-            Eigen::MatrixXf tmp(param.S, data.getDim());
+            Eigen::MatrixXd tmp(param.S, data.getDim());
             for (unsigned i = 0; i != tmp.rows(); ++i)
             {
-                tmp.row(i) = Eigen::Map<Eigen::VectorXf>(data[seqs[i]], data.getDim());
+                tmp.row(i) = Eigen::Map<Eigen::VectorXd>(data[seqs[i]], data.getDim());
             }
-            Eigen::MatrixXf centered = tmp.rowwise() - tmp.colwise().mean();
-            Eigen::MatrixXf cov = (centered.adjoint() * centered) / float(tmp.rows() - 1);
-            Eigen::SelfAdjointEigenSolver<Eigen::MatrixXf> eig(cov);
-            Eigen::MatrixXf mat_c = tmp * eig.eigenvectors().rightCols(npca);
+            Eigen::MatrixXd centered = tmp.rowwise() - tmp.colwise().mean();
+            Eigen::MatrixXd cov = (centered.adjoint() * centered) / double(tmp.rows() - 1);
+            Eigen::SelfAdjointEigenSolver<Eigen::MatrixXd> eig(cov);
+            Eigen::MatrixXd mat_c = tmp * eig.eigenvectors().rightCols(npca);
             minsAll[k].resize(npca);
             std::vector<double> maxs(npca);
             std::vector<double> omega0(npca);
@@ -144,30 +144,30 @@ public:
                 sum += int(maxMode[i]);
             }
             int nModes = sum - npca + 1;
-            std::vector<float> modes_in(nModes, 1);
-            std::vector<std::vector<float> > modes(npca, modes_in);
+            std::vector<double> modes_in(nModes, 1);
+            std::vector<std::vector<double> > modes(npca, modes_in);
             int m = 1;
             for (unsigned i = 0; i != modes.size(); ++i)
             {
                 for (unsigned j = 0; j != maxMode[i] - 1; ++j)
                 {
-                    modes[i][m + j] = float(j + 2);
+                    modes[i][m + j] = double(j + 2);
                 }
                 m = m + int(maxMode[i]) - 1;
             }
-            std::vector<std::vector<float> > omegas(npca);
+            std::vector<std::vector<double> > omegas(npca);
             for (unsigned i = 0; i != omegas.size(); ++i)
             {
                 omegas[i].resize(nModes);
                 for (unsigned j = 0; j != omegas[i].size(); ++j)
                 {
-                    omegas[i][j] = float(modes[i][j] * omega0[i]);
+                    omegas[i][j] = double(modes[i][j] * omega0[i]);
                 }
             }
-            std::vector<std::pair<unsigned, float> > eigVal(nModes);
+            std::vector<std::pair<unsigned, double> > eigVal(nModes);
             for (unsigned i = 0; i != eigVal.size(); ++i)
             {
-                float sum = 0;
+                double sum = 0;
                 for (unsigned j = 0; j != omegas.size(); ++j)
                 {
                     sum += omegas[j][i] * omegas[j][i];
@@ -212,21 +212,21 @@ public:
         for (unsigned k = 0; k != param.L; ++k)
         {
             unsigned sum = 0;
-            std::vector<float> domin_pc(pcsAll[k].size());
+            std::vector<double> domin_pc(pcsAll[k].size());
             for (unsigned i = 0; i != domin_pc.size(); ++i)
             {
                 for (unsigned j = 0; j != pcsAll[k][i].size(); ++j)
                 {
                     domin_pc[i] += domin[j] * pcsAll[k][i][j];
                 }
-                domin_pc[i] -= float(minsAll[k][i]);
+                domin_pc[i] -= double(minsAll[k][i]);
             }
             for (unsigned i = 0; i != domin_pc.size(); ++i)
             {
-                float product = 1;
+                double product = 1;
                 for (unsigned j = 0; j != omegasAll[k][i].size(); ++j)
                 {
-                    product *= float(std::sin(domin_pc[j] * omegasAll[k][i][j] + M_PI / 2));
+                    product *= double(std::sin(domin_pc[j] * omegasAll[k][i][j] + M_PI / 2));
                 }
                 if (product > 0)
                 {
@@ -249,21 +249,21 @@ public:
         for (unsigned k = 0; k != param.L; ++k)
         {
             unsigned sum = 0;
-            std::vector<float> domin_pc(pcsAll[k].size());
+            std::vector<double> domin_pc(pcsAll[k].size());
             for (unsigned i = 0; i != domin_pc.size(); ++i)
             {
                 for (unsigned j = 0; j != pcsAll[k][i].size(); ++j)
                 {
                     domin_pc[i] += domin[j] * pcsAll[k][i][j];
                 }
-                domin_pc[i] -= float(minsAll[k][i]);
+                domin_pc[i] -= double(minsAll[k][i]);
             }
             for (unsigned i = 0; i != domin_pc.size(); ++i)
             {
-                float product = 1;
+                double product = 1;
                 for (unsigned j = 0; j != omegasAll[k][i].size(); ++j)
                 {
-                    product *= float(std::sin(domin_pc[j] * omegasAll[k][i][j] + M_PI / 2));
+                    product *= double(std::sin(domin_pc[j] * omegasAll[k][i][j] + M_PI / 2));
                 }
                 if (product > 0)
                 {
@@ -321,8 +321,8 @@ public:
             {
                 pcsAll[i][j].resize(param.D);
                 omegasAll[i][j].resize(param.N);
-                in.read((char *)&pcsAll[i][j][0], sizeof(float) * param.D);
-                in.read((char *)&omegasAll[i][j][0], sizeof(float) * param.N);
+                in.read((char *)&pcsAll[i][j][0], sizeof(double) * param.D);
+                in.read((char *)&omegasAll[i][j][0], sizeof(double) * param.N);
             }
         }
         in.close();
@@ -356,8 +356,8 @@ public:
             out.write((char *)&minsAll[i][0], sizeof(double) * param.N);
             for (unsigned j = 0; j != param.N; ++j)
             {
-                out.write((char *)&pcsAll[i][j][0], sizeof(float) * param.D);
-                out.write((char *)&omegasAll[i][j][0], sizeof(float) * param.N);
+                out.write((char *)&pcsAll[i][j][0], sizeof(double) * param.D);
+                out.write((char *)&omegasAll[i][j][0], sizeof(double) * param.N);
             }
         }
         out.close();
@@ -365,8 +365,8 @@ public:
 private:
     Parameter param;
     std::vector<std::vector<double> > minsAll;
-    std::vector<std::vector<std::vector<float> > > pcsAll;
-    std::vector<std::vector<std::vector<float> > > omegasAll;
+    std::vector<std::vector<std::vector<double> > > pcsAll;
+    std::vector<std::vector<std::vector<double> > > omegasAll;
     std::vector<std::vector<unsigned> > rndArray;
     std::vector<std::map<unsigned, std::vector<unsigned> > > tables;
 };
