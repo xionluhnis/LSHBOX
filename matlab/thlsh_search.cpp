@@ -50,8 +50,8 @@ public:
             param.L = L;
             param.D = data.getDim();
             param.N = N;
-            param.Max = std::numeric_limits<float>::max();
-            param.Min = - std::numeric_limits<float>::max();
+            param.Max = std::numeric_limits<double>::max();
+            param.Min = - std::numeric_limits<double>::max();
             for (unsigned i = 0; i != data.getSize(); ++i)
             {
                 for (unsigned j = 0; j != data.getDim(); ++j)
@@ -90,7 +90,7 @@ public:
             scanner.reset(quy + i * data.getDim());
             lsh.query(quy + i * data.getDim(), scanner);
             scanner.topk().genTopk();
-            std::vector<std::pair<float, unsigned> > tmp = scanner.topk().getTopk();
+            std::vector<std::pair<double, unsigned> > tmp = scanner.topk().getTopk();
             for (unsigned j = 0; j != tmp.size(); ++j)
             {
                 indices[i * K + j] = tmp[j].second;

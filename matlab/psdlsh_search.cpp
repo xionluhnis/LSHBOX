@@ -36,7 +36,7 @@ public:
         unsigned M = 521,
         unsigned L = 5,
         unsigned T = 2,
-        float W = 0.5)
+        double W = 0.5)
     {
         data.load(source, size, dim);
         std::ifstream is(index.c_str(), std::ios_base::binary);
@@ -76,7 +76,7 @@ public:
             scanner.reset(quy + i * data.getDim());
             lsh.query(quy + i * data.getDim(), scanner);
             scanner.topk().genTopk();
-            std::vector<std::pair<float, unsigned> > tmp = scanner.topk().getTopk();
+            std::vector<std::pair<double, unsigned> > tmp = scanner.topk().getTopk();
             for (unsigned j = 0; j != tmp.size(); ++j)
             {
                 indices[i * K + j] = tmp[j].second;
