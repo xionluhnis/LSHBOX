@@ -103,7 +103,7 @@ public:
     {
         int npca = param.N;
         std::mt19937 rng(unsigned(std::time(0)));
-        std::normal_distribution<float> nd;
+        std::normal_distribution<double> nd;
         std::uniform_int_distribution<unsigned> usBits(0, data.getSize() - 1);
         for (unsigned k = 0; k != param.L; ++k)
         {
@@ -123,7 +123,7 @@ public:
                 tmp.row(i) = Eigen::Map<Eigen::VectorXd>(data[seqs[i]], data.getDim());
             }
             Eigen::MatrixXd centered = tmp.rowwise() - tmp.colwise().mean();
-            Eigen::MatrixXd cov = (centered.transpose() * centered) / float(tmp.rows() - 1);
+            Eigen::MatrixXd cov = (centered.transpose() * centered) / double(tmp.rows() - 1);
             Eigen::SelfAdjointEigenSolver<Eigen::MatrixXd> eig(cov);
             Eigen::MatrixXd mat_pca = eig.eigenvectors().rightCols(npca);
             Eigen::MatrixXd mat_c = tmp * mat_pca;
@@ -195,7 +195,7 @@ public:
         for (unsigned k = 0; k != param.L; ++k)
         {
             unsigned sum = 0;
-            std::vector<float> domin_pc(pcsAll[k].size());
+            std::vector<double> domin_pc(pcsAll[k].size());
             for (unsigned i = 0; i != domin_pc.size(); ++i)
             {
                 for (unsigned j = 0; j != pcsAll[k][i].size(); ++j)
@@ -205,10 +205,10 @@ public:
             }
             for (unsigned i = 0; i != domin_pc.size(); ++i)
             {
-                float product = 0;
+                double product = 0;
                 for (unsigned j = 0; j != omegasAll[k][i].size(); ++j)
                 {
-                    product += float(domin_pc[j] * omegasAll[k][i][j]);
+                    product += double(domin_pc[j] * omegasAll[k][i][j]);
                 }
                 if (product > 0)
                 {
@@ -231,7 +231,7 @@ public:
         for (unsigned k = 0; k != param.L; ++k)
         {
             unsigned sum = 0;
-            std::vector<float> domin_pc(pcsAll[k].size());
+            std::vector<double> domin_pc(pcsAll[k].size());
             for (unsigned i = 0; i != domin_pc.size(); ++i)
             {
                 for (unsigned j = 0; j != pcsAll[k][i].size(); ++j)
@@ -241,10 +241,10 @@ public:
             }
             for (unsigned i = 0; i != domin_pc.size(); ++i)
             {
-                float product = 0;
+                double product = 0;
                 for (unsigned j = 0; j != omegasAll[k][i].size(); ++j)
                 {
-                    product += float(domin_pc[j] * omegasAll[k][i][j]);
+                    product += double(domin_pc[j] * omegasAll[k][i][j]);
                 }
                 if (product > 0)
                 {
@@ -299,8 +299,8 @@ public:
             {
                 pcsAll[i][j].resize(param.D);
                 omegasAll[i][j].resize(param.N);
-                in.read((char *)&pcsAll[i][j][0], sizeof(float) * param.D);
-                in.read((char *)&omegasAll[i][j][0], sizeof(float) * param.N);
+                in.read((char *)&pcsAll[i][j][0], sizeof(double) * param.D);
+                in.read((char *)&omegasAll[i][j][0], sizeof(double) * param.N);
             }
         }
         in.close();
@@ -333,16 +333,16 @@ public:
             }
             for (unsigned j = 0; j != param.N; ++j)
             {
-                out.write((char *)&pcsAll[i][j][0], sizeof(float) * param.D);
-                out.write((char *)&omegasAll[i][j][0], sizeof(float) * param.N);
+                out.write((char *)&pcsAll[i][j][0], sizeof(double) * param.D);
+                out.write((char *)&omegasAll[i][j][0], sizeof(double) * param.N);
             }
         }
         out.close();
     }
 private:
     Parameter param;
-    std::vector<std::vector<std::vector<float> > > pcsAll;
-    std::vector<std::vector<std::vector<float> > > omegasAll;
+    std::vector<std::vector<std::vector<double> > > pcsAll;
+    std::vector<std::vector<std::vector<double> > > omegasAll;
     std::vector<std::vector<unsigned> > rndArray;
     std::vector<std::map<unsigned, std::vector<unsigned> > > tables;
 };
